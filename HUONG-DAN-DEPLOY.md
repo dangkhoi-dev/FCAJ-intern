@@ -1,9 +1,5 @@
 # 🚀 Hướng dẫn deploy FCAJ Moderation lên AWS
 
-> Dành cho **Quân + Đức** (task 7 backend, task 9 deploy & test).
-> Source này do **Khôi + Quốc** chuẩn bị, đã cover xong **task 6** (đóng gói model → Lambda container) và **task 8** (frontend React).
-> Region gợi ý: `ap-southeast-1` (Singapore). Bedrock Claude Haiku nếu region chưa hỗ trợ thì dùng `us-east-1` cho Bedrock (đã tách env `BEDROCK_REGION`).
-
 ## Kiến trúc
 
 ```
