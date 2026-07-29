@@ -1,0 +1,71 @@
+name: Deploy Hugo site to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master # phong khi repo dung nhanh mac dinh la master
+  workflow_dispatch: # cho phep bam chay tay tren tab Actions
+
+permissions:
+  contents: write
+
+# Push lien tiep thi huy build cu, tranh 2 lan deploy de len nhau
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # can cho .GitInfo / lastmod cua theme
+
+      - name: Clean stale public/ directory
+        run: rm -rf public
+
+      - name: Verify theme exists
+        run: |
+          if [ ! -f themes/hugo-theme-learn/theme.toml ]; then
+            echo "::error::Thieu themes/hugo-theme-learn tren GitHub -> site se build ra trang trang."
+            echo "Chay tren may: git add -f themes/ && git commit -m 'add theme' && git push"
+            exit 1
+          fi
+
+      # Tu tinh baseURL dung theo repo -> khong bao gio bi vo CSS vi quen sua config.toml
+      - name: Compute base URL
+        id: baseurl
+        run: |
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO="${{ github.event.repository.name }}"
+          if [ "$REPO" = "$OWNER_LC.github.io" ]; then
+            URL="https://$OWNER_LC.github.io/"
+          else
+            URL="https://$OWNER_LC.github.io/$REPO/"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Base URL se dung: $URL"
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: "0.134.3"
+          extended: true
+
+      - name: Build website
+        run: hugo --minify --gc --baseURL "${{ steps.baseurl.outputs.url }}"
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          force_orphan: true
+
+      - name: Print site URL
+        run: echo "::notice title=Link bao cao::${{ steps.baseurl.outputs.url }}"

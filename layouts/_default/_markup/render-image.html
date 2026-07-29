@@ -1,0 +1,28 @@
+{{- /*
+  Image render hook.
+
+  1) A markdown path such as /images/foo.png is left alone by Hugo when
+     canonifyURLs = false, so on GitHub Pages (site served from
+     https://<user>.github.io/<repo>/) every image would 404. We strip the
+     leading slash and run it through relURL, which prepends the repo path.
+     relURL - not relLangURL - because static files are shared by both
+     languages and must NOT get a /vi/ prefix.
+
+  2) If the file is not in static/ yet, draw a labelled placeholder instead of
+     a broken-image icon. Drop the file in and it becomes a real image; no
+     other edit needed.
+*/ -}}
+{{- $src := .Destination -}}
+{{- $alt := .Text -}}
+{{- if or (hasPrefix $src "http://") (hasPrefix $src "https://") (hasPrefix $src "//") (hasPrefix $src "data:") -}}
+<img src="{{ $src | safeURL }}" alt="{{ $alt }}"{{ with .Title }} title="{{ . }}"{{ end }} loading="lazy">
+{{- else -}}
+{{- $clean := strings.TrimPrefix "/" $src -}}
+{{- if os.FileExists (printf "static/%s" $clean) -}}
+<img src="{{ $clean | relURL }}" alt="{{ $alt }}"{{ with .Title }} title="{{ . }}"{{ end }} loading="lazy">
+{{- else -}}
+<span style="display:block;border:1px dashed #d5a441;border-radius:6px;padding:16px 12px;margin:14px 0;text-align:center;background:#fdf8ee;color:#8a6d1f;font-size:14px;line-height:1.6">
+<strong>{{ $alt }}</strong><br><span style="font-size:12px;opacity:.85">Ảnh sẽ được bổ sung — <code>{{ $src }}</code></span>
+</span>
+{{- end -}}
+{{- end -}}

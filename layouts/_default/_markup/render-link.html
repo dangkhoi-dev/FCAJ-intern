@@ -1,0 +1,6 @@
+{{- /* Same sub-folder fix as render-image, for markdown links that start with "/". */ -}}
+{{- $d := .Destination -}}
+{{- if and (hasPrefix $d "/") (not (hasPrefix $d "//")) -}}
+{{- $d = (strings.TrimPrefix "/" $d) | relURL -}}
+{{- end -}}
+<a href="{{ $d | safeURL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if strings.HasPrefix .Destination "http" }} target="_blank" rel="noopener"{{ end }}>{{ .Text | safeHTML }}</a>

@@ -1,0 +1,12 @@
+# Hugo build output - CI rebuilds this, never commit it
+public/
+resources/_gen/
+.hugo_build.lock
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+
+# working files, not part of the site
+_report*.zip
+/images/
