@@ -14,7 +14,7 @@ Tôi là **nhóm trưởng** của nhóm 4 thành viên. Cụ thể, tôi phụ 
 
 **1. Huấn luyện model.** Tôi làm trọn phần model từ đầu tới cuối: chuẩn bị và làm sạch dữ liệu ViHSD, dựng baseline TF-IDF + Logistic Regression để đối chứng, fine-tune XLM-RoBERTa-base có class weighting cho tỉ lệ nhãn lệch 82/7/11, đánh giá trên tập test tách riêng, rồi xuất kết quả sang ONNX kèm quantize INT8 động để vừa được vào một Lambda container image.
 
-**2. Định hướng kỹ thuật.** Tôi chọn bài toán và chọn stack, và ra những quyết định mà phần việc còn lại phụ thuộc vào: dùng XLM-RoBERTa thay vì PhoBERT (để có khả năng zero-shot tiếng Anh), tự host model đã quantize thay vì dùng inference endpoint quản trị sẵn (để tiết kiệm chi phí), và quan trọng nhất là quyết định giữ model fine-tune trong bản production dù nó thấp hơn baseline TF-IDF về macro-F1 — bởi recall của nó trên OFFENSIVE và HATE cao hơn đáng kể, và một hệ thống kiểm duyệt thì nên sai theo hướng bắt nhầm còn hơn bỏ sót.
+**2. Định hướng kỹ thuật và kiến trúc.** Tôi chọn bài toán, chọn stack, thiết kế kiến trúc và tự vẽ sơ đồ bản cuối trên draw.io, Đức và Quân review lại. Tôi ra những quyết định mà phần việc còn lại phụ thuộc vào: dùng XLM-RoBERTa thay vì PhoBERT (để có khả năng zero-shot tiếng Anh), tự host model đã quantize thay vì dùng inference endpoint quản trị sẵn (để tiết kiệm chi phí), cho Lambda chạy ngoài VPC (không có tài nguyên private nên đặt vào VPC chỉ thêm chi phí NAT và kéo dài cold start), và quan trọng nhất là quyết định giữ model fine-tune trong bản production dù nó thấp hơn baseline TF-IDF về macro-F1 — bởi recall của nó trên OFFENSIVE và HATE cao hơn đáng kể, và một hệ thống kiểm duyệt thì nên sai theo hướng bắt nhầm còn hơn bỏ sót.
 
 **3. Tích hợp model lên chung với Bedrock.** Cơ chế cascade là do tôi thiết kế và tự triển khai. Thay vì coi precision thấp của model là một khuyết điểm phải giấu, tôi dựng kiến trúc xoay quanh chính điểm yếu đó: container Lambda chạy model ONNX cho mọi request, và chỉ những dự đoán dưới ngưỡng tin cậy 0,7 — đúng vùng model không đáng tin — mới được đẩy sang Claude Haiku trên Bedrock để thẩm định lại. Tôi viết phần logic ngưỡng, prompt gửi Bedrock và đoạn hợp nhất kết quả trả về, đồng thời tinh chỉnh ngưỡng dựa trên tập validation.
 
@@ -22,7 +22,16 @@ Tôi là **nhóm trưởng** của nhóm 4 thành viên. Cụ thể, tôi phụ 
 
 Song song đó tôi chấp bút và đăng các bài blog của nhóm lên cộng đồng AWS Study Group, chủ trì outline báo cáo, hoàn thiện và deploy website báo cáo song ngữ này.
 
-Ba thành viên còn lại phụ trách các mảng ngoài phần model: Quân làm backend Lambda/API Gateway và nền tảng tài khoản AWS, Đức làm DynamoDB, IAM và ECR, Quốc làm front end React. Phần việc của tôi nằm ở chỗ giao nhau giữa tất cả các mảng đó — cũng chính là nơi phát sinh phần lớn lỗi tích hợp.
+Ba thành viên còn lại phụ trách các mảng ngoài phần model. Phần việc của tôi nằm ở chỗ giao nhau giữa tất cả các mảng đó — cũng chính là nơi phát sinh phần lớn lỗi tích hợp.
+
+### Thành viên nhóm
+
+| MSSV | Họ và tên | Email | Phụ trách |
+|---|---|---|---|
+| 2352626 | **Trần Phan Đăng Khôi** *(nhóm trưởng — tác giả báo cáo này)* | khoi.tranphandang@hcmut.edu.vn | Huấn luyện và đánh giá model, định hướng kỹ thuật, **thiết kế và vẽ sơ đồ kiến trúc**, tích hợp Bedrock, test luồng kiến trúc end-to-end |
+| 2353015 | Trần Bá Minh Quân | quan.tranbaminh12@hcmut.edu.vn | Backend Lambda và API Gateway, nền tảng tài khoản AWS |
+| 2352265 | Lê Trần Minh Đức | duc.letranminh@hcmut.edu.vn | DynamoDB, IAM và ECR, pipeline triển khai front end |
+| 2353028 | Nguyễn Kiến Quốc | quoc.nguyenkien@hcmut.edu.vn | Front end React |
 
 ### Mức độ tham gia chương trình
 

@@ -14,12 +14,16 @@ Profane and offensive language is pervasive in comments across Vietnamese social
 
 The system's processing flow:
 
-1. A user enters a sentence on the **demo website** (React, hosted on Amplify Hosting).
-2. **API Gateway** receives the `POST /moderate` request and forwards it to Lambda.
-3. **Lambda (container image)** runs the fine-tuned XLM-RoBERTa model (ONNX INT8) and returns a label with confidence.
-4. If confidence < 0.7, Lambda calls **Amazon Bedrock (Claude Haiku)** for arbitration.
-5. The result is written to **DynamoDB** and returned to the UI, with violating words highlighted.
-6. **CloudWatch** records logs, metrics and alarms; **S3** stores datasets and model artifacts; **ECR** hosts the Docker image.
+1. The browser loads the React app from **Amplify Hosting** — static assets only.
+2. The browser itself sends `POST /moderate` **directly to API Gateway**, on a different origin from the page. Amplify is not a proxy and is out of the path from here on; this cross-origin call is why CORS must be configured.
+3. **API Gateway** invokes **Lambda (container image)** through proxy integration.
+4. Lambda runs the fine-tuned XLM-RoBERTa model (ONNX INT8), held inside the image, and produces a label with a confidence score.
+5. If confidence < 0.7, the request is escalated to **Amazon Bedrock (Claude 3 Haiku)**.
+6. Bedrock returns the adjudicated label to Lambda.
+7. Either way, Lambda writes the record to **DynamoDB** exactly once.
+8. The response returns through API Gateway to the browser, with violating words highlighted.
+
+Alongside the request path: **IAM** supplies the least-privilege execution role, **CloudWatch** collects logs, metrics and alarms, and **CloudTrail** records account-level API activity. At build time only, **S3** distributes the model artefacts and **ECR** holds the container image, which Lambda pulls and caches when the function is created or updated — never per request.
 
 ![Architecture diagram](/images/5-Workshop/architecture.png)
 
@@ -32,9 +36,10 @@ The system's processing flow:
 | Lambda (container) | Model inference | Serverless, pay per request, supports images up to 10 GB |
 | Amazon Bedrock | Arbitrates hard cases | Use Claude without self-hosting an LLM |
 | DynamoDB | Moderation history | On-demand, free tier, millisecond latency |
-| S3 | Datasets + model artifacts | Durable, cheap |
-| ECR | Docker image registry | Direct integration with Lambda |
+| S3 | Datasets + model artefacts (**build time only**) | Durable, cheap; weights are baked into the image, not fetched at runtime |
+| ECR | Container image registry | Direct integration with Lambda; image cached at function create/update, not per request |
 | CloudWatch | Logs / metrics / alarms | Monitoring and measurement as required by the project |
+| CloudTrail | Account-level API audit trail | Every action attributable to a named identity |
 | Organizations + IAM Identity Center | Manages 4 member accounts | Least privilege, environment separation |
 
 #### What you achieve after this workshop

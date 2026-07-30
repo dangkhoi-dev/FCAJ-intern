@@ -23,10 +23,23 @@ Nhóm tự fine-tune mô hình phân loại văn bản đa ngôn ngữ trên dat
 Giảm khối lượng kiểm duyệt thủ công, trả kết quả trong khoảng 1 giây khi container đã warm, hỗ trợ tiếng Việt và — nhờ backbone đa ngôn ngữ — cả tiếng Anh, kiến trúc serverless không tốn chi phí cố định và dễ mở rộng thành API kiểm duyệt cho ứng dụng khác.
 
 ### 3. Kiến trúc giải pháp
-Luồng xử lý: người dùng nhập câu trên website (Amplify Hosting) → API Gateway nhận request POST /moderate → Lambda (container image chứa mô hình đã fine-tune) phân loại → nếu confidence < 0.7, Lambda gọi Amazon Bedrock (Claude Haiku) phân xử lại → kết quả (nhãn, confidence, nguồn quyết định) ghi vào DynamoDB và trả về UI, các từ tục tĩu được highlight.
+Luồng xử lý, đánh số đúng như trên sơ đồ bên dưới:
+
+1. Trình duyệt tải ứng dụng React từ **Amplify Hosting** — Amplify chỉ phục vụ file tĩnh.
+2. Từ đây Amplify không còn nằm trên đường đi: chính trình duyệt gọi **POST /moderate** thẳng tới **API Gateway**, ở một origin khác với origin đã phục vụ trang. Đây chính là lý do phải cấu hình CORS cho cả preflight lẫn response thật.
+3. API Gateway gọi **Lambda** qua proxy integration.
+4. Container Lambda chạy model XLM-RoBERTa đã fine-tune (ONNX INT8) nằm sẵn trong image, cho ra nhãn kèm độ tin cậy.
+5. Nếu độ tin cậy < 0.7, request được đẩy sang **Amazon Bedrock (Claude 3 Haiku)**.
+6. Bedrock trả nhãn đã phân xử về lại Lambda.
+7. Dù đi nhánh nào, Lambda cũng ghi bản ghi vào **DynamoDB** đúng một lần.
+8. Kết quả trả ngược qua API Gateway về trình duyệt, kèm highlight các từ vi phạm.
+
+**IAM** cấp execution role cho Lambda theo đặc quyền tối thiểu, **CloudWatch** thu log và metric từ API Gateway, Lambda và Bedrock, **CloudTrail** ghi nhật ký hoạt động API ở cấp tài khoản. Artefact của model chỉ đi qua đường build: Colab → S3 → `docker build` → **ECR** → `UpdateFunctionCode` — không có lần tải model nào trong lúc xử lý request.
 
 ![Sơ đồ kiến trúc](/images/2-Proposal/architecture.png)
-*(Sơ đồ do Đức & Quân vẽ trên draw.io.)*
+*(Sơ đồ do Trần Phan Đăng Khôi vẽ trên draw.io; Lê Đức và Trần Quân review.)*
+
+> **Không dùng VPC riêng — đây là lựa chọn có chủ đích.** Lambda chạy trong VPC do AWS quản lý. Function không truy cập tài nguyên private nào, nên đặt nó vào VPC riêng chỉ thêm NAT Gateway (tính tiền theo giờ dù không có traffic) và ENI attachment làm cold start dài hơn, mà không được lợi gì. DynamoDB, Bedrock và API Gateway được gọi qua service endpoint công khai của AWS với xác thực IAM SigV4, không đi qua internet công cộng.
 
 *Dịch vụ AWS sử dụng*
 - **AWS Amplify Hosting**: host UI React demo, CI/CD từ GitHub, HTTPS sẵn có.
@@ -34,9 +47,10 @@ Luồng xử lý: người dùng nhập câu trên website (Amplify Hosting) →
 - **AWS Lambda (container image)**: chạy suy luận mô hình XLM-RoBERTa đã fine-tune (ONNX INT8); serverless, chỉ trả tiền theo request.
 - **Amazon Bedrock (Claude Haiku)**: LLM phân xử các câu khó (mỉa mai, tiếng lóng mới), không cần tự host LLM.
 - **Amazon DynamoDB**: lưu lịch sử kiểm duyệt (requestId, câu, nhãn, confidence, timestamp).
-- **Amazon S3**: lưu dataset và model artifacts.
-- **Amazon ECR**: chứa Docker image của Lambda.
+- **Amazon S3**: lưu dataset và model artifact. Chỉ dùng ở giai đoạn build — trọng số model đã nằm sẵn trong container image, không tải từ S3 lúc chạy request.
+- **Amazon ECR**: chứa container image của Lambda; image được pull và cache lúc tạo/cập nhật function, không phải mỗi lần gọi.
 - **Amazon CloudWatch**: logs, metrics, alarm (lỗi Lambda, độ trễ, chi phí).
+- **AWS CloudTrail**: nhật ký kiểm toán hoạt động API ở cấp tài khoản.
 - **AWS Organizations + IAM Identity Center**: quản lý tài khoản 4 thành viên, phân quyền least privilege.
 
 *Lý do chọn kiến trúc serverless*: không phải quản lý server, tự động scale theo traffic, chi phí theo mức dùng phù hợp dự án sinh viên, và thể hiện được nhiều dịch vụ AWS trong một use-case thực tế (vượt yêu cầu tối thiểu 3 dịch vụ).

@@ -34,10 +34,18 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 ```powershell
 cd D:\AWS\fcj-workshop-template
-.\2-XEM-LOCAL.ps1
+hugo server -D --disableFastRender --baseURL "/"
 ```
 
-Mở trình duyệt vào **http://localhost:1313/**. Sửa file `.md` nào rồi lưu lại là trang tự nạp lại, không phải chạy lại script. Dừng server bằng **Ctrl + C**.
+Mở trình duyệt vào **http://localhost:1313/**. Sửa file `.md` nào rồi lưu lại là trang tự nạp lại. Dừng server bằng **Ctrl + C**.
+
+> **Vì sao phải có `--baseURL "/"`.** `config.toml` đặt `baseURL` là
+> `https://dangkhoi-dev.github.io/FCAJ-intern/`. Hugo server giữ nguyên phần đường dẫn con
+> `/FCAJ-intern/`, nên nếu chạy trần thì trang gốc `localhost:1313/` trả **404** — nội dung thật nằm ở
+> `localhost:1313/FCAJ-intern/`. Ghi đè baseURL khi chạy local là cách gọn nhất.
+>
+> **Tuyệt đối không sửa `baseURL` trong `config.toml`** để chữa lỗi này. GitHub Action tự tính lại
+> baseURL theo tên repo lúc build; sửa vào file chỉ làm lệch bản deploy.
 
 Nếu báo *"hugo không tìm thấy"*, cài Hugo **extended** (bắt buộc bản extended, bản thường sẽ lỗi SCSS):
 

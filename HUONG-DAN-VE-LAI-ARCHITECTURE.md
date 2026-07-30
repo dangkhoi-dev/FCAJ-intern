@@ -1,8 +1,11 @@
-# Hướng dẫn vẽ lại sơ đồ kiến trúc
+# Ghi chú thiết kế sơ đồ kiến trúc
 
-> Dành cho Đức. Mở `architect.drawio` bằng draw.io (app.diagrams.net), sửa theo file này rồi
+> Sơ đồ do Trần Phan Đăng Khôi thiết kế và vẽ; Lê Đức và Trần Quân review.
+> File này ghi lại các quy ước đã áp dụng, để lần sau sửa vẫn giữ được tính nhất quán.
+>
+> Mở `architect.drawio` bằng draw.io (app.diagrams.net), sửa xong thì
 > **File → Export as → PNG**, Zoom **300%**, Border width **10**, tick **Transparent background = OFF**.
-> Lưu đè `images/architecture.png`.
+> Lưu đè `images/architect_final.png`.
 
 ---
 
@@ -18,7 +21,7 @@ Bộ icon cũ (AWS 17 trở về trước) có viền và tỉ lệ khác, trộ
 |---|---|---|
 | Compute | Cam `#ED7100` | Lambda |
 | Containers | Cam `#ED7100` | ECR |
-| Database | **Xanh dương `#527FFF`** | **DynamoDB** ← đang sai, hiện là hồng |
+| Database | Tím-hồng "Nebula" `#C925D1` | DynamoDB *(icon hiện tại đã đúng)* |
 | Storage | Xanh lá `#7AA116` | S3 |
 | App Integration | Hồng `#E7157B` | API Gateway |
 | Front-End Web & Mobile | Đỏ `#DD344C` | Amplify |

@@ -23,10 +23,23 @@ The team fine-tunes its own multilingual text classification model on the public
 Reduces manual moderation workload, answers in about a second on a warm container, covers Vietnamese and — thanks to the multilingual backbone — English as well, and the serverless architecture has no fixed cost and can easily be extended into a moderation API for other applications.
 
 ### 3. Solution Architecture
-Processing flow: the user enters a sentence on the website (Amplify Hosting) → API Gateway receives a POST /moderate request → Lambda (container image with the fine-tuned model) classifies it → if confidence < 0.7, Lambda calls Amazon Bedrock (Claude Haiku) to re-judge → the result (label, confidence, decision source) is written to DynamoDB and returned to the UI, with profane words highlighted.
+Processing flow, numbered as in the diagram below:
+
+1. The browser loads the React single-page application from **Amplify Hosting**, which serves static assets only.
+2. From that point Amplify is out of the path: the browser itself issues **POST /moderate** directly to **API Gateway** — a different origin from the one that served the page, which is exactly why CORS has to be configured on both the preflight and the real response.
+3. API Gateway invokes **Lambda** through proxy integration.
+4. The Lambda container runs the fine-tuned XLM-RoBERTa (ONNX INT8) held inside the image, and produces a label with a confidence score.
+5. If confidence < 0.7, the request is escalated to **Amazon Bedrock (Claude 3 Haiku)**.
+6. Bedrock returns the adjudicated label to Lambda.
+7. Either way Lambda writes the record to **DynamoDB** exactly once.
+8. The response returns through API Gateway to the browser, with the offending terms highlighted in the UI.
+
+**IAM** supplies the Lambda execution role at least privilege, **CloudWatch** collects logs and metrics from API Gateway, Lambda and Bedrock, and **CloudTrail** records API activity at account level. Model artefacts reach the function at build time only — Colab → S3 → `docker build` → **ECR** → `UpdateFunctionCode` — so no model is downloaded during a request.
 
 ![Architecture diagram](/images/2-Proposal/architecture.png)
-*(Diagram drawn by Duc & Quan on draw.io.)*
+*(Diagram drawn by Tran Phan Dang Khoi on draw.io; reviewed by Le Duc and Tran Quan.)*
+
+> **No customer VPC — by design.** Lambda runs in the AWS-managed VPC. The function accesses no private resources, so putting it inside a customer VPC would add a NAT Gateway (billed hourly even with zero traffic) and an elastic network interface attachment that lengthens cold start, for no benefit. DynamoDB, Bedrock and API Gateway are reached over AWS public service endpoints with SigV4 IAM authentication, not over the public internet.
 
 *AWS services used*
 - **AWS Amplify Hosting**: hosts the React demo UI, CI/CD from GitHub, built-in HTTPS.
@@ -34,9 +47,10 @@ Processing flow: the user enters a sentence on the website (Amplify Hosting) →
 - **AWS Lambda (container image)**: runs the fine-tuned XLM-RoBERTa model (ONNX INT8); serverless, pay per request.
 - **Amazon Bedrock (Claude Haiku)**: LLM arbitration for hard cases (sarcasm, new slang) without self-hosting an LLM.
 - **Amazon DynamoDB**: stores moderation history (requestId, text, label, confidence, timestamp).
-- **Amazon S3**: stores datasets and model artifacts.
-- **Amazon ECR**: hosts the Lambda Docker image.
+- **Amazon S3**: stores datasets and model artefacts. Build-time only — the weights are baked into the container image, so nothing is fetched from S3 during a request.
+- **Amazon ECR**: hosts the Lambda container image; the image is pulled and cached when the function is created or updated, not per invocation.
 - **Amazon CloudWatch**: logs, metrics, alarms (Lambda errors, latency, cost).
+- **AWS CloudTrail**: account-level audit trail of API activity.
 - **AWS Organizations + IAM Identity Center**: manages the four members' accounts with least-privilege access.
 
 *Why serverless*: no servers to manage, automatic scaling with traffic, pay-per-use pricing suitable for a student project, and it showcases many AWS services in one realistic use-case (exceeding the minimum requirement of 3 services).

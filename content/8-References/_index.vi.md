@@ -10,10 +10,11 @@ pre: " <b> 8. </b> "
 
 | Hạng mục | Link |
 |---|---|
-| 🌐 Website demo (Amplify Hosting) | <https://staging.d1aznu46odat7f.amplifyapp.com/> — *hiện không truy cập được: toàn bộ tài nguyên AWS đã bị xoá ngày 30/07/2026 ở bước tối ưu chi phí mục 5.6. Mọi màn hình đều đã chụp lại ở mục 5.5.* |
+| 🌐 Website demo (Amplify Hosting) | <https://staging.d195tgjspr8fol.amplifyapp.com/> |
 | 💻 Source code — `fcaj-moderation` (Lambda container + frontend React) | <https://github.com/dangkhoi-dev/FCAJ-intern> |
 | 📓 Notebook huấn luyện `train_text_classifier.ipynb` | <https://github.com/dangkhoi-dev/FCAJ-intern/blob/main/train_text_classifier.ipynb> |
-| 📝 Blog 1 — Xây dựng hệ thống kiểm duyệt nội dung serverless với Lambda + Amazon Bedrock (Trần Phan Đăng Khôi) | Đăng ngày 28/07/2026 trong group [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) — *đang chờ duyệt; link post cố định sẽ bổ sung khi bài được đăng* |
+| 🎥 Video demo - chạy thử trọn 5 kịch bản kiểm duyệt | [Thư mục Google Drive](https://drive.google.com/drive/folders/1XJQKyHK-BFxbIw5PF8m4Qtrqee273UM0?usp=sharing) |
+| 📝 Blog 1 — Xây dựng hệ thống kiểm duyệt nội dung serverless với Lambda + Amazon Bedrock (Trần Phan Đăng Khôi) | [Bài đăng Facebook](https://www.facebook.com/groups/awsstudygroupfcj/permalink/2226726084759018/) |
 | 📝 Blog 2 — Từ React tới người dùng: Amplify Hosting, API Gateway và CloudWatch (Lê Đức) | Đăng ngày 28/07/2026 trong group [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) — *đang chờ duyệt* |
 | 📝 Blog 3 — Thiết kế bảng DynamoDB cho hệ thống AI ghi log (Trần Quân) | Đăng ngày 28/07/2026 trong group [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) — *đang chờ duyệt* |
 

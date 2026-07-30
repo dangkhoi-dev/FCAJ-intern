@@ -10,7 +10,7 @@ pre: " <b> 3.1. </b> "
 
 **Người viết & đăng bài:** Trần Phan Đăng Khôi &emsp;|&emsp; **Nơi đăng:** Group Facebook AWS Study Group
 
-**Link bài đăng:** đăng ngày 28/07/2026 trong group [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) — đang chờ quản trị viên duyệt tại thời điểm nộp báo cáo
+**Link bài đăng:** <https://www.facebook.com/groups/awsstudygroupfcj/permalink/2226726084759018/>
 
 #### Tóm tắt nội dung
 

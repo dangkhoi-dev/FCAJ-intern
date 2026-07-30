@@ -12,7 +12,7 @@ chapter: false
 
 &emsp; **Phone Number:** 0812002998
 
-&emsp; **Email:** tranphandangkhoi205@gmail.com
+&emsp; **Email:** khoi.tranphandang@hcmut.edu.vn
 
 &emsp; **University:** Ho Chi Minh City University of Technology (HCMUT) — VNU-HCM
 

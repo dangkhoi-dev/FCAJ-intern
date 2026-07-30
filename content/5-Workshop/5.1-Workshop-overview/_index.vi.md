@@ -14,12 +14,16 @@ Ngôn từ tục tĩu, xúc phạm xuất hiện dày đặc trong bình luận 
 
 Luồng xử lý của hệ thống:
 
-1. Người dùng nhập câu trên **website demo** (React, host bằng Amplify Hosting).
-2. **API Gateway** nhận request `POST /moderate` và chuyển cho Lambda.
-3. **Lambda (container image)** chạy mô hình XLM-RoBERTa đã fine-tune (ONNX INT8), trả về nhãn và confidence.
-4. Nếu confidence < 0.7, Lambda gọi **Amazon Bedrock (Claude Haiku)** để phân xử lại.
-5. Kết quả được ghi vào **DynamoDB** và trả về UI, từ vi phạm được highlight.
-6. **CloudWatch** ghi log, metric và cảnh báo; **S3** lưu dataset và model artifacts; **ECR** chứa Docker image.
+1. Trình duyệt tải ứng dụng React từ **Amplify Hosting** — chỉ là file tĩnh.
+2. Chính trình duyệt gửi `POST /moderate` **thẳng tới API Gateway**, ở origin khác với trang vừa tải. Amplify không phải proxy và từ đây không còn nằm trên đường đi; chính lời gọi cross-origin này là lý do phải cấu hình CORS.
+3. **API Gateway** gọi **Lambda (container image)** qua proxy integration.
+4. Lambda chạy model XLM-RoBERTa đã fine-tune (ONNX INT8) nằm sẵn trong image, cho ra nhãn kèm độ tin cậy.
+5. Nếu độ tin cậy < 0.7, request được đẩy sang **Amazon Bedrock (Claude 3 Haiku)**.
+6. Bedrock trả nhãn đã phân xử về lại Lambda.
+7. Dù đi nhánh nào, Lambda cũng ghi bản ghi vào **DynamoDB** đúng một lần.
+8. Kết quả trả ngược qua API Gateway về trình duyệt, các từ vi phạm được highlight.
+
+Song song với luồng request: **IAM** cấp execution role theo đặc quyền tối thiểu, **CloudWatch** thu log, metric và cảnh báo, **CloudTrail** ghi nhật ký hoạt động API ở cấp tài khoản. Chỉ ở giai đoạn build, **S3** phân phối model artifact và **ECR** chứa container image — Lambda pull và cache image lúc tạo/cập nhật function, không phải mỗi request.
 
 ![Sơ đồ kiến trúc](/images/5-Workshop/architecture.png)
 
@@ -32,9 +36,10 @@ Luồng xử lý của hệ thống:
 | Lambda (container) | Suy luận model | Serverless, trả tiền theo request, hỗ trợ image tới 10 GB |
 | Amazon Bedrock | Phân xử câu khó | Dùng Claude không cần tự host LLM |
 | DynamoDB | Lưu lịch sử kiểm duyệt | On-demand, free tier, độ trễ ms |
-| S3 | Dataset + model artifacts | Bền vững, rẻ |
-| ECR | Chứa Docker image | Tích hợp trực tiếp với Lambda |
+| S3 | Dataset + model artifact (**chỉ ở giai đoạn build**) | Bền, rẻ; trọng số nằm sẵn trong image, không tải lúc chạy |
+| ECR | Chứa container image | Tích hợp trực tiếp với Lambda; image được cache lúc tạo/cập nhật function, không phải mỗi request |
 | CloudWatch | Log / metric / alarm | Giám sát và đo lường theo yêu cầu project |
+| CloudTrail | Nhật ký kiểm toán API cấp tài khoản | Mọi thao tác truy được về một danh tính cụ thể |
 | Organizations + IAM Identity Center | Quản lý 4 account thành viên | Least privilege, tách môi trường |
 
 #### Kết quả đạt được sau workshop

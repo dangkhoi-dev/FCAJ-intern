@@ -10,10 +10,11 @@ pre: " <b> 8. </b> "
 
 | Item | Link |
 |---|---|
-| 🌐 Demo website (Amplify Hosting) | <https://staging.d1aznu46odat7f.amplifyapp.com/> — *the app is no longer reachable: all AWS resources were deleted on 30/07/2026 as part of the cost-cleanup step in section 5.6. Every screen is captured in section 5.5.* |
+| 🌐 Demo website (Amplify Hosting) | <https://staging.d195tgjspr8fol.amplifyapp.com/> |
 | 💻 Source code — `fcaj-moderation` (Lambda container + React frontend) | <https://github.com/dangkhoi-dev/FCAJ-intern> |
 | 📓 Training notebook `train_text_classifier.ipynb` | <https://github.com/dangkhoi-dev/FCAJ-intern/blob/main/train_text_classifier.ipynb> |
-| 📝 Blog 1 — Building a serverless content-moderation system with Lambda + Amazon Bedrock (Tran Phan Dang Khoi) | Posted 28/07/2026 in the [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) group — *awaiting moderator approval; the permanent post link will be added once it is published* |
+| 🎥 Demo video - end-to-end walkthrough of all five moderation scenarios | [Google Drive folder](https://drive.google.com/drive/folders/1XJQKyHK-BFxbIw5PF8m4Qtrqee273UM0?usp=sharing) |
+| 📝 Blog 1 — Building a serverless content-moderation system with Lambda + Amazon Bedrock (Tran Phan Dang Khoi) | [Facebook post](https://www.facebook.com/groups/awsstudygroupfcj/permalink/2226726084759018/) |
 | 📝 Blog 2 — From React to the user: Amplify Hosting, API Gateway and CloudWatch (Le Duc) | Posted 28/07/2026 in the [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) group — *awaiting approval* |
 | 📝 Blog 3 — Designing a DynamoDB table for an AI logging system (Tran Quan) | Posted 28/07/2026 in the [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) group — *awaiting approval* |
 

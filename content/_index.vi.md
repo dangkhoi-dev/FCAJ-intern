@@ -11,7 +11,7 @@ chapter: false
 
 &emsp; **Số điện thoại:** 0812002998
 
-&emsp; **Email:** tranphandangkhoi205@gmail.com
+&emsp; **Email:** khoi.tranphandang@hcmut.edu.vn
 
 &emsp; **Trường:** Trường Đại học Bách Khoa – ĐHQG TP.HCM (HCMUT)
 

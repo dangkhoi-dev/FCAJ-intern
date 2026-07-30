@@ -10,7 +10,7 @@ pre: " <b> 3.1. </b> "
 
 **Author & publisher:** Tran Phan Dang Khoi &emsp;|&emsp; **Published on:** the AWS Study Group Facebook group
 
-**Post link:** posted on 28/07/2026 in the [AWS Study Group VN](https://www.facebook.com/groups/awsstudygroupfcj) group — awaiting moderator approval at the time of submission
+**Post link:** <https://www.facebook.com/groups/awsstudygroupfcj/permalink/2226726084759018/>
 
 #### Summary
 
