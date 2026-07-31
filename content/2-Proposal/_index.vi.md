@@ -26,7 +26,7 @@ Giảm khối lượng kiểm duyệt thủ công, trả kết quả trong kho�
 Luồng xử lý, đánh số đúng như trên sơ đồ bên dưới:
 
 1. Trình duyệt tải ứng dụng React từ **Amplify Hosting** — Amplify chỉ phục vụ file tĩnh.
-2. Từ đây Amplify không còn nằm trên đường đi: chính trình duyệt gọi **POST /moderate** thẳng tới **API Gateway**, ở một origin khác với origin đã phục vụ trang. Đây chính là lý do phải cấu hình CORS cho cả preflight lẫn response thật.
+2. Từ đây Amplify không còn nằm trên đường đi: chính trình duyệt gọi **POST /moderate**, và request đi tới API thông qua **Amazon CloudFront**. Kết thúc kết nối ở edge location gần người dùng nhất giúp rút ngắn bắt tay TLS, đồng thời AWS Shield chặn các đợt tấn công tầng mạng ngay tại biên trước khi chúng chạm tới Region. CloudFront chuyển tiếp request sang **API Gateway**. Vì API và front end nằm ở hai origin khác nhau, trình duyệt vẫn coi đây là lời gọi cross-origin — đó là lý do phải cấu hình CORS cho cả preflight lẫn response thật.
 3. API Gateway gọi **Lambda** qua proxy integration.
 4. Container Lambda chạy model XLM-RoBERTa đã fine-tune (ONNX INT8) nằm sẵn trong image, cho ra nhãn kèm độ tin cậy.
 5. Nếu độ tin cậy < 0.7, request được đẩy sang **Amazon Bedrock (Claude 3 Haiku)**.
@@ -43,6 +43,7 @@ Luồng xử lý, đánh số đúng như trên sơ đồ bên dưới:
 
 *Dịch vụ AWS sử dụng*
 - **AWS Amplify Hosting**: host UI React demo, CI/CD từ GitHub, HTTPS sẵn có.
+- **Amazon CloudFront**: lớp edge đứng trước API — kết thúc TLS gần người dùng, AWS Shield bảo vệ ngay tại biên, và là chỗ tự nhiên để gắn custom domain hoặc AWS WAF. Lưu ý là ở đây nó không mang lại lợi ích cache: `/moderate` là `POST`, mỗi lần một body khác nhau.
 - **Amazon API Gateway**: REST API cho endpoint /moderate, throttling chống lạm dụng.
 - **AWS Lambda (container image)**: chạy suy luận mô hình XLM-RoBERTa đã fine-tune (ONNX INT8); serverless, chỉ trả tiền theo request.
 - **Amazon Bedrock (Claude Haiku)**: LLM phân xử các câu khó (mỉa mai, tiếng lóng mới), không cần tự host LLM.

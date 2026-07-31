@@ -15,7 +15,7 @@ Profane and offensive language is pervasive in comments across Vietnamese social
 The system's processing flow:
 
 1. The browser loads the React app from **Amplify Hosting** — static assets only.
-2. The browser itself sends `POST /moderate` **directly to API Gateway**, on a different origin from the page. Amplify is not a proxy and is out of the path from here on; this cross-origin call is why CORS must be configured.
+2. The browser itself sends `POST /moderate`, which reaches the API through **Amazon CloudFront** — TLS terminated at the nearest edge location, AWS Shield absorbing network-layer attacks at the edge. CloudFront forwards to **API Gateway**. Amplify is not a proxy and is out of the path from here on; because the API sits on a different origin from the page, this remains a cross-origin call and CORS must be configured.
 3. **API Gateway** invokes **Lambda (container image)** through proxy integration.
 4. Lambda runs the fine-tuned XLM-RoBERTa model (ONNX INT8), held inside the image, and produces a label with a confidence score.
 5. If confidence < 0.7, the request is escalated to **Amazon Bedrock (Claude 3 Haiku)**.
@@ -32,6 +32,7 @@ Alongside the request path: **IAM** supplies the least-privilege execution role,
 | Service | Role | Why chosen |
 |---|---|---|
 | Amplify Hosting | Hosts the demo UI | CI/CD from GitHub, built-in HTTPS, generous free tier |
+| CloudFront | Edge layer in front of the API | Shield protection and TLS termination at the edge; **no caching benefit** — `/moderate` is a `POST` with a different body each call |
 | API Gateway | REST endpoint | Managed, throttling to prevent abuse |
 | Lambda (container) | Model inference | Serverless, pay per request, supports images up to 10 GB |
 | Amazon Bedrock | Arbitrates hard cases | Use Claude without self-hosting an LLM |

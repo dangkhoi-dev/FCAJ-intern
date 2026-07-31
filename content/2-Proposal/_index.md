@@ -26,7 +26,7 @@ Reduces manual moderation workload, answers in about a second on a warm containe
 Processing flow, numbered as in the diagram below:
 
 1. The browser loads the React single-page application from **Amplify Hosting**, which serves static assets only.
-2. From that point Amplify is out of the path: the browser itself issues **POST /moderate** directly to **API Gateway** — a different origin from the one that served the page, which is exactly why CORS has to be configured on both the preflight and the real response.
+2. From that point Amplify is out of the path: the browser itself issues **POST /moderate**, which reaches the API through **Amazon CloudFront**. Terminating at the nearest edge location shortens the TLS handshake, and AWS Shield absorbs network-layer attacks at the edge before they reach the Region. CloudFront forwards the request to **API Gateway**. Because the API and the front end sit on different origins, the browser still treats this as a cross-origin call — which is why CORS has to be configured on both the preflight and the real response.
 3. API Gateway invokes **Lambda** through proxy integration.
 4. The Lambda container runs the fine-tuned XLM-RoBERTa (ONNX INT8) held inside the image, and produces a label with a confidence score.
 5. If confidence < 0.7, the request is escalated to **Amazon Bedrock (Claude 3 Haiku)**.
@@ -43,6 +43,7 @@ Processing flow, numbered as in the diagram below:
 
 *AWS services used*
 - **AWS Amplify Hosting**: hosts the React demo UI, CI/CD from GitHub, built-in HTTPS.
+- **Amazon CloudFront**: edge layer in front of the API — TLS terminated close to the user, AWS Shield protection at the edge, and the natural attachment point for a custom domain or AWS WAF. Note that it brings no caching benefit here: `/moderate` is a `POST` whose body differs on every call.
 - **Amazon API Gateway**: REST API for the /moderate endpoint, throttling to prevent abuse.
 - **AWS Lambda (container image)**: runs the fine-tuned XLM-RoBERTa model (ONNX INT8); serverless, pay per request.
 - **Amazon Bedrock (Claude Haiku)**: LLM arbitration for hard cases (sarcasm, new slang) without self-hosting an LLM.

@@ -15,7 +15,7 @@ Ngôn từ tục tĩu, xúc phạm xuất hiện dày đặc trong bình luận 
 Luồng xử lý của hệ thống:
 
 1. Trình duyệt tải ứng dụng React từ **Amplify Hosting** — chỉ là file tĩnh.
-2. Chính trình duyệt gửi `POST /moderate` **thẳng tới API Gateway**, ở origin khác với trang vừa tải. Amplify không phải proxy và từ đây không còn nằm trên đường đi; chính lời gọi cross-origin này là lý do phải cấu hình CORS.
+2. Chính trình duyệt gửi `POST /moderate`, request đi tới API thông qua **Amazon CloudFront** — TLS kết thúc ở edge location gần nhất, AWS Shield chặn tấn công tầng mạng ngay tại biên. CloudFront chuyển tiếp sang **API Gateway**. Amplify không phải proxy và từ đây không còn nằm trên đường đi; vì API ở origin khác với trang vừa tải nên đây vẫn là lời gọi cross-origin, phải cấu hình CORS.
 3. **API Gateway** gọi **Lambda (container image)** qua proxy integration.
 4. Lambda chạy model XLM-RoBERTa đã fine-tune (ONNX INT8) nằm sẵn trong image, cho ra nhãn kèm độ tin cậy.
 5. Nếu độ tin cậy < 0.7, request được đẩy sang **Amazon Bedrock (Claude 3 Haiku)**.
@@ -32,6 +32,7 @@ Song song với luồng request: **IAM** cấp execution role theo đặc quyề
 | Dịch vụ | Vai trò | Lý do chọn |
 |---|---|---|
 | Amplify Hosting | Host UI demo | CI/CD từ GitHub, HTTPS sẵn, miễn phí mức thấp |
+| CloudFront | Lớp edge trước API | Shield bảo vệ và kết thúc TLS ngay tại biên; **không có lợi ích cache** — `/moderate` là `POST`, mỗi lần body khác nhau |
 | API Gateway | REST endpoint | Managed, throttling chống lạm dụng |
 | Lambda (container) | Suy luận model | Serverless, trả tiền theo request, hỗ trợ image tới 10 GB |
 | Amazon Bedrock | Phân xử câu khó | Dùng Claude không cần tự host LLM |
